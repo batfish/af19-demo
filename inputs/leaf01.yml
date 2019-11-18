@@ -1,0 +1,25 @@
+hostname: leaf01
+bgp_as: 65001
+loopback:
+  address: 10.1.1.1
+mgmt:
+  address: 10.254.1.1/16
+  gateway: 10.254.254.254
+ports:
+  - name: swp49
+    bgp: true
+  - name: swp50
+    bgp: true
+  - name: swp51
+    bgp: true
+  - name: swp52
+    bgp: true
+  - name: swp1
+    vlan: 101
+  - name: swp2
+    vlan: 201
+vlans:
+  - id: 101
+    address: 10.100.1.1/24
+  - id: 201
+    address: 10.200.1.1/24

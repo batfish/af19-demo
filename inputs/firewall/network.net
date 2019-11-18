@@ -1,0 +1,57 @@
+#
+# Sample naming defintions for network objects
+#
+RFC1918 = 10.0.0.0/8      # non-public
+          172.16.0.0/12   # non-public
+          192.168.0.0/16  # non-public
+
+INTERNAL = RFC1918
+
+LOOPBACK = 127.0.0.0/8  # loopback
+
+RFC_3330 = 169.254.0.0/16  # special use IPv4 addresses - netdeploy
+
+RFC_6598 = 100.64.0.0/10   # Shared Address Space
+
+MULTICAST = 224.0.0.0/4  # IP multicast
+
+CLASS-E   = 240.0.0.0/4
+
+RESERVED = 0.0.0.0/8           # reserved
+           RFC1918
+           LOOPBACK
+           RFC_3330
+           RFC_6598
+           MULTICAST
+           CLASS-E
+
+ANY = 0.0.0.0/0
+
+# http://www.team-cymru.org/Services/Bogons/bogon-bn-agg.txt
+# 22-Apr-2011
+BOGON = 0.0.0.0/8
+        192.0.0.0/24
+        192.0.2.0/24
+        198.18.0.0/15
+        198.51.100.0/24
+        203.0.113.0/24
+        MULTICAST
+        CLASS-E
+
+GOOGLE_PUBLIC_DNS_ANYCAST = 8.8.4.4/32               # IPv4 Anycast
+                            8.8.8.8/32               # IPv4 Anycast
+GOOGLE_DNS = GOOGLE_PUBLIC_DNS_ANYCAST
+
+CLOUDFLARE = 1.1.1.1/32
+
+PRIVATE = 10.100.0.0/16
+FINANCE = 10.200.10.0/24
+HR = 10.200.20.0/24
+DEVELOPMENT = 10.200.30.0/24
+
+WEB-SERVERS = 10.200.1.0/24
+              10.200.2.0/24
+
+GBL_RFC1918 = 10.0.0.0/8
+              192.168.0.0/16
+

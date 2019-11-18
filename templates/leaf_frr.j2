@@ -1,0 +1,43 @@
+
+### start of frr.conf
+frr version
+
+agentx
+frr defaults datacenter
+hostname {{hostname}}
+username cumulus nopassword
+!
+service integrated-vtysh-config
+!
+log syslog informational
+!
+
+router bgp {{ bgp_as }}
+ bgp router-id {{ loopback['address'] }}
+ bgp bestpath as-path multipath-relax
+ neighbor Fabric peer-group
+ neighbor Fabric remote-as external
+{% for port in ports %}
+{%  if port.bgp is defined and port['bgp'] is sameas true %}
+ neighbor {{ port['name'] }} interface peer-group Fabric
+{% endif -%}
+{% endfor -%}
+ !
+ address-family ipv4 unicast
+  network {{loopback.address}}/32
+{% for vlan in vlans %}
+{% if vlan.address is defined %}
+  network {{ vlan.address }}
+{% endif %}
+{% endfor %}
+  redistribute connected route-map LOOPBACK
+ exit-address-family
+ !
+
+route-map LOOPBACK permit 1
+ match interface lo
+!
+line vty
+!
+
+!### end frr.conf

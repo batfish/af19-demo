@@ -1,0 +1,25 @@
+bgp_as: 65084
+hostname: leaf84
+loopback:
+  address: 10.1.1.84
+mgmt:
+  address: 10.254.1.84/16
+  gateway: 10.254.254.254
+ports:
+- bgp: true
+  name: swp49
+- bgp: true
+  name: swp50
+- bgp: true
+  name: swp51
+- bgp: true
+  name: swp52
+- name: swp1
+  vlan: 184
+- name: swp2
+  vlan: 284
+vlans:
+- address: 10.100.84.1/24
+  id: 184
+- address: 10.200.84.1/24
+  id: 284

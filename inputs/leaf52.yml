@@ -1,0 +1,25 @@
+bgp_as: 65052
+hostname: leaf52
+loopback:
+  address: 10.1.1.52
+mgmt:
+  address: 10.254.1.52/16
+  gateway: 10.254.254.254
+ports:
+- bgp: true
+  name: swp49
+- bgp: true
+  name: swp50
+- bgp: true
+  name: swp51
+- bgp: true
+  name: swp52
+- name: swp1
+  vlan: 152
+- name: swp2
+  vlan: 252
+vlans:
+- address: 10.100.52.1/24
+  id: 152
+- address: 10.200.52.1/24
+  id: 252

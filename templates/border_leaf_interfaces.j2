@@ -1,0 +1,38 @@
+{{hostname}}
+
+# This file describes the network interfaces
+
+auto lo
+iface lo inet loopback
+    address {{ loopback['address'] }}/32
+
+auto eth0
+iface eth0
+    address {{ mgmt['address'] }}
+    gateway {{ mgmt['gateway'] }}
+    vrf mgmt
+
+auto mgmt
+iface mgmt
+    vrf-table auto
+
+{% for port in range(1,5) %}
+auto swp{{ port }}
+iface swp{{ port }}
+
+{% endfor %}
+
+{% for port in ports %}
+auto {{ port.name }}
+iface {{ port.name }}
+    address {{ port.address }}
+    alias {{ port.alias }}
+{% endfor %}
+
+{% for port in range(6,17) %}
+auto swp{{ port }}
+iface swp{{ port }}
+
+{% endfor %}
+
+### end /etc/network/interfaces

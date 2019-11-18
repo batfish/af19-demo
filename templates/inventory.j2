@@ -1,0 +1,24 @@
+[leaf]
+{% for leaf in leaf_list %}
+{{ leaf }}
+{%  endfor %}
+
+[spine]
+{% for spine in spine_list %}
+{{ spine }}
+{% endfor %}
+
+[border_leaf]
+bl01
+bl02
+
+[fwl]
+fwl01
+
+[border]
+bor01
+bor02
+
+[all:vars]
+ansible_connection=local
+localhost ansible_python_interpreter=python

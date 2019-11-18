@@ -1,0 +1,165 @@
+####BATFISH FLATTENED JUNIPER CONFIG####
+set system host-name {{ hostname }}
+set system time-zone UTC
+set system services ssh root-login deny
+set system services netconf ssh
+set system commit synchronize
+set chassis redundancy failover on-loss-of-keepalives
+set chassis redundancy failover on-disk-failure
+set chassis redundancy graceful-switchover
+set chassis aggregated-devices ethernet device-count 64
+set chassis network-services enhanced-ethernet
+
+set interfaces xe-1/0/3 unit 0 description "[type=UL, nbr=FWL:??]"
+set interfaces xe-1/0/3 gigether-options 802.3ad ae1
+
+set interfaces xe-2/0/3 unit 0 description "[type=UL, nbr=FWL:??]"
+set interfaces xe-2/0/3 gigether-options 802.3ad ae1
+
+set interfaces xe-1/2/0 unit 0 description "[type=ISP]"
+set interfaces xe-1/2/0 unit 0 family inet filter input ISP-INBOUND
+set interfaces xe-1/2/0 unit 0 family inet address {{ports.isp.address}}
+
+set interfaces ae1 description "[type=UL, nbr=FWL01:??]"
+set interfaces ae1 enable
+set interfaces ae1 aggregated-ether-options minimum-links 1
+set interfaces ae1 aggregated-ether-options lacp active
+set interfaces ae1 unit 0 description "[type=UL, nbr=FWL01:??]"
+set interfaces ae1 unit 0 family inet address {{ports.fwl01.address}}
+
+set interfaces lo0 unit 0 description "[type=LO]"
+set interfaces lo0 unit 0 family inet address {{loopback.address}}/32
+set routing-options router-id {{loopback.address}}
+set routing-options autonomous-system {{ bgp_as }}
+set protocols bgp path-selection always-compare-med
+set protocols bgp advertise-inactive
+set protocols bgp log-updown
+
+set protocols bgp group ISP type external
+set protocols bgp group ISP description "ISP-A"
+set protocols bgp group ISP hold-time 60
+set protocols bgp group ISP import IMPORT-PROVIDER-GENERIC
+set protocols bgp group ISP export EXPORT-PROVIDER-GENERIC
+set protocols bgp group ISP peer-as {{ ports.isp.bgp_as }}
+set protocols bgp group ISP local-as {{ bgp_as }}
+set protocols bgp group ISP neighbor {{ ports.isp.remote_address }}
+
+set protocols bgp group FWL type external
+set protocols bgp group FWL description "FWL"
+set protocols bgp group FWL import IMPORT-FWL
+set protocols bgp group FWL export NEXT-HOP-SELF
+set protocols bgp group FWL export SEND-DEFAULT
+set protocols bgp group FWL peer-as {{ ports.fwl01.bgp_as }}
+set protocols bgp group FWL local-as {{ bgp_as }}
+set protocols bgp group FWL neighbor {{ ports.fwl01.remote_address }}
+
+set policy-options prefix-list DEFAULT-GATEWAY 0.0.0.0/0
+set policy-options prefix-list MARTIANS 0.0.0.0/8
+set policy-options prefix-list MARTIANS 127.0.0.0/8
+set policy-options prefix-list MARTIANS 169.254.0.0/16
+#set policy-options prefix-list MARTIANS 192.0.2.0/24
+#set policy-options prefix-list MARTIANS 224.0.0.0/3
+set policy-options prefix-list MALICIOUS-SOURCES 52.15.165.117/32
+set policy-options prefix-list MALICIOUS-SOURCES 78.93.180.80/32
+set policy-options prefix-list MALICIOUS-SOURCES 109.235.246.70/32
+set policy-options prefix-list MALICIOUS-SOURCES 190.210.230.78/32
+set policy-options prefix-list MALICIOUS-SOURCES 194.27.18.18/32
+set policy-options prefix-list MALICIOUS-SOURCES 201.216.233.13/32
+set policy-options prefix-list MALICIOUS-DESTINATIONS
+set policy-options prefix-list RFC1918 10.0.0.0/8
+set policy-options prefix-list RFC1918 172.16.0.0/12
+set policy-options prefix-list RFC1918 192.168.0.0/16
+set policy-options prefix-list LOOPBACKS 10.1.0.0/16
+
+set policy-options prefix-list ADVERTISE-TO-PROVIDERS 10.100.0.0/16
+set policy-options prefix-list ADVERTISE-TO-PROVIDERS 10.200.0.0/16
+
+set policy-options prefix-list FABRIC_SPACE 10.100.0.0/16
+set policy-options prefix-list FABRIC_SPACE 10.200.0.0/16
+set policy-options prefix-list SSH_HOST 10.100.56.100/32
+set policy-options prefix-list SSH_HOST 10.100.58.100/32
+
+set policy-options prefix-list BGP-IP4-PEERS apply-path "protocols bgp group <*> neighbor <*.*>"
+
+set policy-options policy-statement IMPORT-PROVIDER-GENERIC term BLOCK-RFC1918 from prefix-list-filter RFC1918 orlonger
+set policy-options policy-statement IMPORT-PROVIDER-GENERIC term BLOCK-RFC1918 then reject
+set policy-options policy-statement IMPORT-PROVIDER-GENERIC term BLOCK-MARTIANS from prefix-list-filter MARTIANS orlonger
+set policy-options policy-statement IMPORT-PROVIDER-GENERIC term BLOCK-MARTIANS then reject
+set policy-options policy-statement IMPORT-PROVIDER-GENERIC term BASELINE then metric 200
+set policy-options policy-statement IMPORT-PROVIDER-GENERIC term BASELINE then local-preference 200
+set policy-options policy-statement IMPORT-PROVIDER-GENERIC term BASELINE then origin igp
+set policy-options policy-statement IMPORT-PROVIDER-GENERIC term BASELINE then accept
+
+set policy-options policy-statement EXPORT-PROVIDER-GENERIC term BASELINE then origin igp
+set policy-options policy-statement EXPORT-PROVIDER-GENERIC term BASELINE then next term
+set policy-options policy-statement EXPORT-PROVIDER-GENERIC term PERMIT from prefix-list ADVERTISE-TO-PROVIDERS
+set policy-options policy-statement EXPORT-PROVIDER-GENERIC term PERMIT then accept
+set policy-options policy-statement EXPORT-PROVIDER-GENERIC term BLOCK-RFC1918 from prefix-list-filter RFC1918 orlonger
+set policy-options policy-statement EXPORT-PROVIDER-GENERIC term BLOCK-RFC1918 then reject
+set policy-options policy-statement EXPORT-PROVIDER-GENERIC term BLOCK-MARTIANS from prefix-list-filter MARTIANS orlonger
+set policy-options policy-statement EXPORT-PROVIDER-GENERIC term BLOCK-MARTIANS then reject
+set policy-options policy-statement EXPORT-PROVIDER-GENERIC term REJECT then reject
+
+set policy-options policy-statement NEXT-HOP-SELF term NHS then next-hop self
+set policy-options policy-statement NEXT-HOP-SELF term NHS then next policy
+
+set policy-options policy-statement SEND-DEFAULT term SEND-DEFAULT from route-filter 0.0.0.0/0 exact
+set policy-options policy-statement SEND-DEFAULT term SEND-DEFAULT then accept
+set policy-options policy-statement SEND-DEFAULT term REJECT then reject
+
+set policy-options policy-statement IMPORT-FWL term ACCEPT-FABRIC from protocol bgp
+set policy-options policy-statement IMPORT-FWL term ACCEPT-FABRIC from prefix-list-filter FABRIC_SPACE orlonger
+set policy-options policy-statement IMPORT-FWL term ACCEPT-FABRIC then accept
+set policy-options policy-statement IMPORT-FWL term DENY then reject
+
+
+set firewall family inet filter ISP-INBOUND term BLOCK-MALICIOUS-SOURCES from source-prefix-list MALICIOUS-SOURCES
+set firewall family inet filter ISP-INBOUND term BLOCK-MALICIOUS-SOURCES then discard
+set firewall family inet filter ISP-INBOUND term BLOCK-MALICIOUS-DESTINATIONS from source-prefix-list MALICIOUS-DESTINATIONS
+set firewall family inet filter ISP-INBOUND term BLOCK-MALICIOUS-DESTINATIONS then discard
+set firewall family inet filter ISP-INBOUND term BLOCK-RFC3330 from source-prefix-list MARTIANS
+set firewall family inet filter ISP-INBOUND term BLOCK-RFC3330 then count COUNTER-RFC3330
+set firewall family inet filter ISP-INBOUND term BLOCK-RFC3330 then discard
+set firewall family inet filter ISP-INBOUND term BLOCK-RFC1918 from source-prefix-list RFC1918
+set firewall family inet filter ISP-INBOUND term BLOCK-RFC1918 then count COUNTER-RFC1918
+set firewall family inet filter ISP-INBOUND term BLOCK-RFC1918 then discard
+set firewall family inet filter ISP-INBOUND term BLOCK-SPOOFED-TRAFFIC from source-prefix-list FABRIC_SPACE
+set firewall family inet filter ISP-INBOUND term BLOCK-SPOOFED-TRAFFIC then count COUNTER-SPOOFED-TRAFFIC
+set firewall family inet filter ISP-INBOUND term BLOCK-SPOOFED-TRAFFIC then discard
+set firewall family inet filter ISP-INBOUND term ALLOW-BGP-IN from source-prefix-list BGP-IP4-PEERS
+set firewall family inet filter ISP-INBOUND term ALLOW-BGP-IN from protocol tcp
+set firewall family inet filter ISP-INBOUND term ALLOW-BGP-IN from port bgp
+set firewall family inet filter ISP-INBOUND term ALLOW-BGP-IN then accept
+set firewall family inet filter ISP-INBOUND term DENY-BGP-IN from protocol tcp
+set firewall family inet filter ISP-INBOUND term DENY-BGP-IN from port bgp
+set firewall family inet filter ISP-INBOUND term DENY-BGP-IN then accept
+set firewall family inet filter ISP-INBOUND term ALLOW-ICMP from protocol icmp
+set firewall family inet filter ISP-INBOUND term ALLOW-ICMP from icmp-type 0
+set firewall family inet filter ISP-INBOUND term ALLOW-ICMP from icmp-type 3
+set firewall family inet filter ISP-INBOUND term ALLOW-ICMP from icmp-type 8
+set firewall family inet filter ISP-INBOUND term ALLOW-ICMP from icmp-type 11
+set firewall family inet filter ISP-INBOUND term ALLOW-ICMP then policer ICMP-POLICER
+set firewall family inet filter ISP-INBOUND term ALLOW-ICMP then accept
+set firewall family inet filter ISP-INBOUND term PERMIT-DNS-TO-PUBLIC-DNS from protocol udp
+set firewall family inet filter ISP-INBOUND term PERMIT-DNS-TO-PUBLIC-DNS from source-port 53
+set firewall family inet filter ISP-INBOUND term PERMIT-DNS-TO-PUBLIC-DNS then accept
+set firewall family inet filter ISP-INBOUND term PERMIT-TCP-ESTABLISHED from destination-prefix-list FABRIC_SPACE
+set firewall family inet filter ISP-INBOUND term PERMIT-TCP-ESTABLISHED from protocol tcp
+set firewall family inet filter ISP-INBOUND term PERMIT-TCP-ESTABLISHED from tcp-established
+set firewall family inet filter ISP-INBOUND term PERMIT-TCP-ESTABLISHED then accept
+set firewall family inet filter ISP-INBOUND term PERMIT-HTTPS from protocol tcp
+set firewall family inet filter ISP-INBOUND term PERMIT-HTTPS from destination-port 443
+set firewall family inet filter ISP-INBOUND term PERMIT-HTTPS then accept
+set firewall family inet filter ISP-INBOUND term PERMIT-SSH-JUMPHOST from protocol tcp
+set firewall family inet filter ISP-INBOUND term PERMIT-SSH-JUMPHOST from destination-port 22
+set firewall family inet filter ISP-INBOUND term PERMIT-SSH-JUMPHOST from destination-prefix-list SSH_HOST
+set firewall family inet filter ISP-INBOUND term PERMIT-SSH-JUMPHOST then accept
+set firewall family inet filter ISP-INBOUND term DISCARD-UNEXPECTED-UDP from protocol udp
+set firewall family inet filter ISP-INBOUND term DISCARD-UNEXPECTED-UDP then count COUNTER-UNEXPECTED-UDP
+set firewall family inet filter ISP-INBOUND term DISCARD-UNEXPECTED-UDP then discard
+set firewall policer UDP-POLICER if-exceeding bandwidth-limit 20m
+set firewall policer UDP-POLICER if-exceeding burst-size-limit 30m
+set firewall policer UDP-POLICER then discard
+set firewall policer ICMP-POLICER if-exceeding bandwidth-limit 5m
+set firewall policer ICMP-POLICER if-exceeding burst-size-limit 10m
+set firewall policer ICMP-POLICER then discard

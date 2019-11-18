@@ -1,0 +1,509 @@
+version 12.1X46-D35.1;
+groups {
+    node0 {
+        system {
+            host-name fwl01;
+            syslog {
+                source-address {{ mgmt.address }};
+            }
+            ntp {
+                source-address {{ mgmt.address }};
+            }
+        }
+        interfaces {
+            fxp0 {
+                unit 0 {
+                    family inet {
+                        address {{ mgmt.address }};
+                    }
+                }
+            }
+        }
+    }
+}
+apply-groups "${node}";
+system {
+    time-zone UTC;
+    services {
+        ssh {
+            root-login deny;
+        }
+        netconf {
+            ssh;
+        }
+        web-management {
+            http {
+                interface fxp0.0;
+            }
+        }
+    }
+    syslog {
+        user * {
+            any emergency;
+        }
+        file messages {
+            any any;
+            authorization info;
+        }
+        file interactive-commands {
+            interactive-commands any;
+        }
+    }
+}
+chassis {
+    cluster {
+        reth-count 4;
+        redundancy-group 0 {
+            node 0 priority 150;
+            node 1 priority 100;
+        }
+        redundancy-group 1 {
+            node 0 priority 150;
+            node 1 priority 100;
+            hold-down-interval 300;
+        }
+        redundancy-group 2 {
+            node 0 priority 150;
+            node 1 priority 100;
+            hold-down-interval 10;
+        }
+        redundancy-group 3 {
+            node 0 priority 150;
+            node 1 priority 100;
+            hold-down-interval 300;
+        }
+        redundancy-group 4 {
+            node 0 priority 150;
+            node 1 priority 100;
+            hold-down-interval 10;
+        }
+    }
+}
+security {
+    address-book {
+        global {
+            address GBL_RFC1918-10 10.0.0.0/8;
+        }
+    }
+    screen {
+        ids-option ATTACK-SCREEN {
+            alarm-without-drop;
+            icmp {
+                ip-sweep threshold 4000;
+                large;
+                flood threshold 1000;
+                ping-death;
+            }
+            ip {
+                bad-option;
+                record-route-option;
+                timestamp-option;
+                spoofing;
+                source-route-option;
+                loose-source-route-option;
+                strict-source-route-option;
+                unknown-protocol;
+                tear-drop;
+            }
+            tcp {
+                syn-fin;
+                tcp-no-flag;
+                port-scan threshold 3000;
+                syn-flood {
+                    alarm-threshold 2000;
+                    attack-threshold 5000;
+                    source-threshold 2000;
+                    destination-threshold 5000;
+                    timeout 5;
+                }
+                land;
+                winnuke;
+                tcp-sweep threshold 3000;
+            }
+            udp {
+                flood threshold 2000;
+                udp-sweep threshold 1000;
+            }
+            limit-session {
+                source-ip-based 20000;
+            }
+        }
+    }
+    policies {
+        from-zone INSIDE to-zone SELF {
+            policy PERMIT-SSH {
+                match {
+                    source-address GBL_RFC1918-10;
+                    destination-address any;
+                    application junos-ssh;
+                }
+                then {
+                    permit;
+                }
+            }
+            policy PERMIT-ICMP {
+                match {
+                    source-address GBL_RFC1918-10;
+                    destination-address any;
+                    application junos-icmp-all;
+                }
+                then {
+                    permit;
+                }
+            }
+            policy DENY-INSIDE-SELF {
+                match {
+                    source-address any;
+                    destination-address any;
+                    application any;
+                }
+                then {
+                    deny;
+                    log {
+                        session-init;
+                        session-close;
+                    }
+                }
+            }
+        }
+        global {
+            policy DENY-ALL {
+                match {
+                    source-address any;
+                    destination-address any;
+                    application any;
+                }
+                then {
+                    deny;
+                    log {
+                        session-init;
+                        session-close;
+                    }
+                }
+            }
+        }
+    }
+    zones {
+        security-zone SELF {
+            host-inbound-traffic {
+                system-services {
+                    ping;
+                    ssh;
+                    snmp;
+                }
+            }
+            interfaces {
+                lo0.0;
+            }
+        }
+        security-zone OUTSIDE {
+            tcp-rst;
+            screen ATTACK-SCREEN;
+            host-inbound-traffic {
+                system-services {
+                    ping;
+                }
+                protocols {
+                    bgp;
+                }
+            }
+            interfaces {
+                reth2.0;
+                reth3.0;
+            }
+        }
+        security-zone INSIDE {
+            tcp-rst;
+            host-inbound-traffic {
+                system-services {
+                    ping;
+                }
+                protocols {
+                    ospf;
+                }
+            }
+            interfaces {
+                reth0.0;
+                reth1.0;
+            }
+        }
+    }
+}
+interfaces {
+    xe-1/0/0 {
+        description "[type=UL, nbr=BL01:??]";
+        gigether-options {
+            redundant-parent reth0;
+        }
+    }
+    xe-1/0/1 {
+        description "[type=UL, nbr=BL02:??]";
+        gigether-options {
+            redundant-parent reth1;
+        }
+    }
+    xe-2/0/0 {
+        description "[type=UL, nbr=BOR01:??]";
+        gigether-options {
+            redundant-parent reth2;
+        }
+    }
+    xe-2/0/1 {
+        description "[type=UL, nbr=B0R02:??]";
+        gigether-options {
+            redundant-parent reth3;
+        }
+    }
+    xe-9/0/0 {
+        description "[type=UL, nbr=BL01:??]";
+        gigether-options {
+            redundant-parent reth0;
+        }
+    }
+    xe-9/0/1 {
+        description "[type=UL, nbr=BL02:??]";
+        gigether-options {
+            redundant-parent reth1;
+        }
+    }
+    xe-10/0/0 {
+        description "[type=UL, nbr=BOR01:??]";
+        gigether-options {
+            redundant-parent reth2;
+        }
+    }
+    xe-10/0/1 {
+        description "[type=UL, nbr=B0R02:??]";
+        gigether-options {
+            redundant-parent reth3;
+        }
+    }
+    fxp0 {
+        enable;
+        speed 100m;
+        unit 0;
+    }
+    lo0 {
+        description "[type=LO]";
+        unit 0 {
+            description "[type=LO";
+            family inet {
+                address {{ loopback.address }}/32;
+            }
+        }
+    }
+    reth0 {
+        description "[nbr=BL01:??]";
+        redundant-ether-options {
+            redundancy-group 1;
+            lacp {
+                active;
+            }
+        }
+        unit 0 {
+            description "[nbr=BL01:??] FWL-INSIDE";
+            family inet {
+                address {{ ports.bl01.address }};
+            }
+        }
+    }
+    reth1 {
+        description "[nbr=BL02:??]";
+        redundant-ether-options {
+            redundancy-group 2;
+            lacp {
+                active;
+            }
+        }
+        unit 0 {
+            description "[nbr=BL01:??] FWL-INSIDE";
+            family inet {
+                address {{ ports.bl02.address }};
+            }
+        }
+    }
+    reth2 {
+        description "[nbr=BOR01:??]";
+        redundant-ether-options {
+            redundancy-group 3;
+            lacp {
+                active;
+            }
+        }
+        unit 0 {
+            description "[nbr=BL01:??] FWL-OUTSIDE";
+            family inet {
+                address {{ ports.bor01.address }};
+            }
+        }
+    }
+    reth3 {
+        description "[nbr=BOR02:??]";
+        redundant-ether-options {
+            redundancy-group 4;
+            lacp {
+                active;
+            }
+        }
+        unit 0 {
+            description "[nbr=BL01:??] FWL-OUTSIDE";
+            family inet {
+                address {{ ports.bor02.address }};
+            }
+        }
+    }
+}
+routing-options {
+    router-id {{ loopback.address }};
+}
+policy-options {
+    prefix-list DEFAULT-ROUTE {
+        0.0.0.0/0;
+    }
+    prefix-list MARTIANS {
+        0.0.0.0/8;
+        127.0.0.0/8;
+        169.254.0.0/16;
+        192.0.2.0/24;
+        224.0.0.0/3;
+    }
+    prefix-list RFC1918 {
+        10.0.0.0/8;
+        172.16.0.0/12;
+        192.168.0.0/16;
+        192.168.0.0/32;
+    }
+    prefix-list LOOPBACKS {
+        10.1.0.0/16;
+    }
+    prefix-list FABRIC_AGG {
+        10.100.0.0/16;
+        10.200.0.0/16;
+    }
+    policy-statement EXPORT-BL {
+        term DEFAULT-ROUTE {
+            from {
+                protocol bgp;
+                route-filter 0.0.0.0/0 exact;
+            }
+            then {
+                preference 140;
+                accept;
+            }
+        }
+        term DENY {
+            then reject;
+        }
+    }
+    policy-statement EXPORT-BOR {
+        term ADVERTISE_AGG {
+            from {
+                protocol aggregate;
+                prefix-list-filter FABRIC_AGG exact;
+            }
+            then {
+                metric 100;
+                accept;
+            }
+        }
+    }
+    policy-statement FABRIC_AGG {
+        from {
+            protocol bgp;
+            prefix-list-filter FABRIC_AGG orlonger;
+        }
+        then accept;
+    }
+    policy-statement IMPORT-BL {
+        term FABRIC_SCOPE {
+            from {
+                protocol bgp;
+                prefix-list-filter FABRIC_AGG orlonger;
+            }
+            then {
+                metric 100;
+                accept;
+            }
+        }
+    }
+    policy-statement IMPORT-BOR {
+        term DEFAULT-ROUTE {
+            from {
+                protocol bgp;
+                prefix-list-filter DEFAULT-ROUTE exact;
+            }
+            then {
+                preference 140;
+                accept;
+            }
+        }
+        term DENY {
+            then reject;
+        }
+    }
+    policy-statement NEXT-HOP-SELF {
+        term NHS {
+            then {
+                next-hop self;
+                next policy;
+            }
+        }
+    }
+}
+routing-instances {
+    DATA {
+        instance-type virtual-router;
+        interface lo0.0;
+        interface reth0.0;
+        interface reth1.0;
+        interface reth2.0;
+        interface reth3.0;
+        routing-options {
+            graceful-restart;
+            aggregate {
+                route 10.100.0.0/16;
+                route 10.200.0.0/16;
+            }
+            router-id {{ loopback.address }};
+        }
+        protocols {
+            bgp {
+                path-selection always-compare-med;
+                advertise-inactive;
+                log-updown;
+                group EBGP-BOR {
+                    type external;
+                    description "[peer=BORs] EBGP";
+                    import IMPORT-BOR;
+                    export [ NEXT-HOP-SELF EXPORT-BOR ];
+                    local-as {{ bgp_as }};
+                    neighbor {{ ports.bor01.remote_address }}{
+                        description "[peer=BOR01] EBGP";
+                        peer-as {{ ports.bor01.bgp_as }};
+                    }
+                    neighbor {{ ports.bor02.remote_address }} {
+                        description "[peer=BOR02] EBGP";
+                        peer-as {{ ports.bor02.bgp_as }};
+                    }
+                }
+                group EBGP-BL {
+                    type external;
+                    description "[peer=BLs] EBGP";
+                    import IMPORT-BL;
+                    export [ NEXT-HOP-SELF EXPORT-BL ];
+                    local-as {{ bgp_as }};
+                    neighbor {{ ports.bl01.remote_address }} {
+                        description "[peer=BL01] EBGP";
+                        peer-as {{ ports.bl01.bgp_as }};
+                    }
+                    neighbor {{ ports.bl02.remote_address }} {
+                        description "[peer=BL02] EBGP";
+                        peer-as {{ ports.bl02.bgp_as }};
+                    }
+                }
+            }
+        }
+    }
+}
+
+

@@ -1,0 +1,25 @@
+bgp_as: 65036
+hostname: leaf36
+loopback:
+  address: 10.1.1.36
+mgmt:
+  address: 10.254.1.36/16
+  gateway: 10.254.254.254
+ports:
+- bgp: true
+  name: swp49
+- bgp: true
+  name: swp50
+- bgp: true
+  name: swp51
+- bgp: true
+  name: swp52
+- name: swp1
+  vlan: 136
+- name: swp2
+  vlan: 236
+vlans:
+- address: 10.100.36.1/24
+  id: 136
+- address: 10.200.36.1/24
+  id: 236

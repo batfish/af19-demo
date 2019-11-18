@@ -1,0 +1,16 @@
+hostname: bor02
+bgp_as: 65402
+loopback:
+  address: 10.1.5.2
+mgmt:
+  address: 10.254.5.2/16
+  gateway: 10.254.254.254
+ports:
+  fwl01:
+    address: 10.2.1.7/31
+    remote_address: 10.2.1.6
+    bgp_as: 65301
+  isp:
+    address: 149.1.2.0/31
+    remote_address: 149.1.2.1
+    bgp_as: 600

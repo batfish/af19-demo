@@ -1,0 +1,14 @@
+external_services:
+- name: Google DNS
+  ip: '8.8.8.8'
+  protocol: 'udp'
+  port: '53'
+
+- name: Cloudflare DNS
+  ip: '1.1.1.1'
+  protocol: 'udp'
+  port: '53'
+
+- name: AWS
+  ip: '@addressGroup(metadata, aws)'
+  protocol: 'icmp'

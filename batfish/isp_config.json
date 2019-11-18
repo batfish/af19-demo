@@ -1,0 +1,19 @@
+{
+  "borderInterfaces": [
+    {
+      "borderInterface": {
+        "hostname": "bor01",
+        "interface": "xe-1/2/0.0"
+      }
+    }, {
+      "borderInterface": {
+        "hostname": "bor02",
+        "interface": "xe-1/2/0.0"
+      }
+    }
+  ],
+  "filter": {
+    "onlyRemoteAsns": [],
+    "onlyRemoteIps": []
+  }
+}

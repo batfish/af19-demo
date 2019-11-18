@@ -1,0 +1,127 @@
+---
+- name: Request new service through firewall
+  connection: local
+  hosts: localhost
+  gather_facts: no
+
+  vars:
+    demo_base_dir: "{{ lookup('env', 'PWD') }}"
+
+    out_in_yaml: inputs/firewall/fwl_out_in.yml
+    in_out_yaml: inputs/firewall/fwl_in_out.yml
+    network_net: inputs/firewall/network.net
+    services_svc: inputs/firewall/services.svc
+
+    input_yaml: "{{ out_in_yaml }}"
+    output_yaml: "{{ out_in_yaml }}"
+
+  vars_prompt:
+    - name: "direction"
+      prompt: "Direction of request flow. IN for opening up access to internal service from the internet. OUT for opening up access to external service"
+      default: IN
+      private: no
+    - name: "destination_address"
+      prompt: "Enter the destination IP address/prefix"
+      private: no
+    - name: "source_address"
+      prompt: "Enter the source IP address/prefix"
+      default: "0.0.0.0/0"
+      private: no
+    - name: "protocol"
+      prompt: "Enter the IP protocol (tcp or udp)"
+      default: "tcp"
+      private: no
+    - name: "application"
+      prompt: "Enter the name of the application"
+      private: no
+    - name: "destination_port"
+      prompt: "Enter the destination port"
+      default: 443
+      private: no
+    - name: "term_name"
+      prompt: "Enter the change request id (must start with [a-zA-Z] and not contain spaces)"
+      private: no
+      default: "CHG12345"
+
+  tasks:
+    - set_fact:
+        input_yaml: "{{ in_out_yaml }}"
+        output_yaml: "{{ in_out_yaml }}"
+      when: direction == "OUT"
+
+    - name: Add network definition to network.net file
+      blockinfile:
+        path: "../{{network_net}}"
+        block: |
+          NET-{{ destination_address }} =  {{ destination_address }}
+          NET-{{ source_address }} = {{ source_address }}
+        marker: "## Added for change request {{term_name}} ##"
+
+    - name: Add service definition to services.svc file
+      blockinfile:
+        path: "../{{services_svc}}"
+        block: |
+          APP-{{ application }} = {{ destination_port }}/{{ protocol }}
+        marker: "## Added for change request {{term_name}} ##"
+
+    - set_fact:
+         name: "{{ term_name }}"
+         clauses:
+           destination_port: "APP-{{ application }}"
+           protocol: "{{ protocol }}"
+           destination_address: "NET-{{ destination_address }}"
+           source_address: "NET-{{ source_address }}"
+           action: "accept"
+      register: new_term
+
+    - name: Read existing policy into memory
+      include_vars:
+        file: "../{{ input_yaml }}"
+        name: terms
+
+#    - name: Print term
+#      debug:
+#        msg: "{{terms}}"
+#
+#    - name: Print new term
+#      debug:
+#        msg: "{{new_term}}"
+
+    - name: Create new list and add new term to list
+      set_fact:
+         test: "{{ terms.terms + [ new_term.ansible_facts ] }}"
+
+#    - name: Print term
+#      debug:
+#        msg: "{{test}}"
+
+    - name: Create new policy in memory
+      set_fact:
+         file_out:
+           target: "{{ terms.target }}"
+           terms: "{{ test }}"
+
+    - name: Write new policy to file
+      copy:
+        content: "{{ file_out|to_nice_yaml }}"
+        dest: "../{{ output_yaml }}"
+
+    - name: Default commit message
+      set_fact:
+        commit_message: "Change request {{term_name}} for access to {{destination_address}} application {{application}} from {{source_address}}"
+
+    - name: Prompt for commit message
+      pause:
+        prompt: "Enter commit message [{{ commit_message }}]"
+      register: commit_prompt
+
+    - name: Override default commit message if needed
+      set_fact:
+        commit_message: "{{ commit_prompt.user_input }}"
+      when: commit_prompt.user_input != ""
+
+    - name: Add new file to git, commit, and push
+      shell:
+        "git add ../inputs;
+          git commit -am \"{{ commit_message }}\";
+          git push"

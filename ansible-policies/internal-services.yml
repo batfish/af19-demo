@@ -1,0 +1,16 @@
+internal_services:
+- name: Private subnets (non-TCP)
+  ip: '10.100.0.0/16'
+  protocol: '!tcp'
+
+- name: Finance (non-TCP)
+  ip: '10.200.10.0/24'
+  protocol: '!tcp, !icmp'
+
+- name: HR (non-TCP)
+  ip: '10.200.20.0/24'
+  protocol: '!tcp, !icmp'
+
+- name: Development (non-TCP)
+  ip: '10.200.30.0/24'
+  protocol: '!tcp, !icmp'

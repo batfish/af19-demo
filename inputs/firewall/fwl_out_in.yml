@@ -1,0 +1,17 @@
+target: srx from-zone OUTSIDE to-zone INSIDE
+terms:
+-   clauses:
+        action: accept
+        icmp_type: echo-request echo-reply
+        destination_exclude: PRIVATE
+        logging: true
+        protocol: icmp
+    name: PERMIT-ICMP
+-   clauses:
+        action: accept
+        destination_address: WEB-SERVERS
+        destination_port: HTTPS HTTP
+        logging: true
+        protocol: tcp
+    name: PERMIT-WEB
+

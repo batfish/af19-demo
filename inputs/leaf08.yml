@@ -1,0 +1,25 @@
+bgp_as: 65008
+hostname: leaf08
+loopback:
+  address: 10.1.1.8
+mgmt:
+  address: 10.254.1.8/16
+  gateway: 10.254.254.254
+ports:
+- bgp: true
+  name: swp49
+- bgp: true
+  name: swp50
+- bgp: true
+  name: swp51
+- bgp: true
+  name: swp52
+- name: swp1
+  vlan: 108
+- name: swp2
+  vlan: 208
+vlans:
+- address: 10.100.8.1/24
+  id: 108
+- address: 10.200.8.1/24
+  id: 208

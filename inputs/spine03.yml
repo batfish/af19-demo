@@ -1,0 +1,7 @@
+hostname: spine03
+bgp_as: 65103
+loopback:
+  address: 10.1.2.3
+mgmt:
+  address: 10.254.2.3/16
+  gateway: 10.254.254.254

@@ -1,0 +1,13 @@
+hostname: bl01
+bgp_as: 65201
+loopback:
+  address: 10.1.3.1
+mgmt:
+  address: 10.254.3.1/16
+  gateway: 10.254.254.254
+ports:
+  - name: swp5
+    address: 10.2.1.1/31
+    alias: Connection to FWL01
+    bgp_as: 65401
+    remote_address: 10.2.1.0

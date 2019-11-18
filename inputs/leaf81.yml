@@ -1,0 +1,25 @@
+bgp_as: 65081
+hostname: leaf81
+loopback:
+  address: 10.1.1.81
+mgmt:
+  address: 10.254.1.81/16
+  gateway: 10.254.254.254
+ports:
+- bgp: true
+  name: swp49
+- bgp: true
+  name: swp50
+- bgp: true
+  name: swp51
+- bgp: true
+  name: swp52
+- name: swp1
+  vlan: 181
+- name: swp2
+  vlan: 281
+vlans:
+- address: 10.100.81.1/24
+  id: 181
+- address: 10.200.81.1/24
+  id: 281

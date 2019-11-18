@@ -1,0 +1,7 @@
+hostname: spine02
+bgp_as: 65102
+loopback:
+  address: 10.1.2.2
+mgmt:
+  address: 10.254.2.2/16
+  gateway: 10.254.254.254

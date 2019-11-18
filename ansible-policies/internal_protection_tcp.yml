@@ -1,0 +1,86 @@
+---
+- name: Protect internal services (TCP)
+  hosts: all
+  gather_facts: no
+  roles:
+    - batfish.base
+
+  tasks:
+
+  - name: Create Batfish session in a block that is "delegate_to -> localhost" and "run_once -> true"
+    block:
+    - name: Setup connection to Batfish Enterprise service
+      bf_session:
+        host: localhost
+        name: local_batfish
+        parameters:
+          session_type: bfe
+    rescue:
+    - name: Setup connection to Batfish service
+      bf_session:
+        host: localhost
+        name: local_batfish
+        parameters:
+          session_type: bf
+
+    delegate_to: localhost
+    run_once: true
+
+  - name: Set network and snapshot
+    bf_set_snapshot:
+        network: "{{ lookup('env','BF_NETWORK') }}"
+        snapshot: "{{ lookup('env','BF_SNAPSHOT') }}"
+    delegate_to: localhost
+    run_once: true
+
+  - name: Execute Batfish related tasks in a block that is "delegate_to -> localhost" and "run_once -> true"
+    block:
+
+    - name: Read internal services
+      include_vars:
+        file: internal-services-tcp.yml
+        name: internal_services
+
+    - set_fact:
+        assertions: []
+
+    - name: Get a list of assertions from list of internal services that should be blocked from Internet
+      set_fact:
+        assertions: "{{ assertions + [
+              { 'type': 'assert_all_flows_fail',
+                  'name': item.name + ' reachability',
+                  'parameters': {
+                      'startLocation': 'internet',
+                      'headers': {
+                           'dstIps': item.ip,
+                           'ipProtocols': 'tcp',
+                           'dstPorts': item.port|default(omit),
+                           'flowStates': ['new']
+                      }
+                  }
+              } ] }}"
+      loop: "{{ internal_services.internal_services }}"
+
+    - name: Initialize fact that records cumulative failure status
+      set_fact:
+        cumulative_failed: false
+
+    - name: Validate that critical internal services are protected from Internet
+      bf_assert:
+        assertions: "{{ assertions }}"
+      ignore_errors: true
+      register: assertion_result
+
+    - name: Update cumulative failure
+      set_fact:
+        cumulative_failed: "{{ cumulative_failed or assertion_result.failed }}"
+
+
+    - name: Fail if any assertion failed
+      fail:
+        msg: At least one assertion failed. See logs for details.
+      when: cumulative_failed|bool
+
+
+    delegate_to: localhost
+    run_once: true

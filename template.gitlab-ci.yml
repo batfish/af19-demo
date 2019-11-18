@@ -1,0 +1,76 @@
+variables:
+  BF_GIT_FILE: ".bfgit"
+  BF_NETWORK: "af19-demonet"
+  bf_policy_ci_url: ${CI_JOB_URL}
+  BF_SNAPSHOT_DIR: "snapshot"
+  # Change pip's cache directory to be inside the project directory since we can
+  # only cache local items.
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+stages:
+  - build
+  - test
+
+# Pip's cache doesn't store the python packages
+# https://pip.pypa.io/en/stable/reference/pip_install/#caching
+#
+# If you want to also cache the installed packages, you have to install
+# them in a virtualenv and cache it as well.
+cache:
+  paths:
+    - .cache/pip
+    - venv/
+
+before_script:
+  - python -V               # Print out python version for debugging
+  - virtualenv -p python3 venv
+  - source venv/bin/activate
+  - pip install -r requirements.txt
+  - ansible-galaxy install batfish.base
+
+config_gen:
+  stage: build
+  script:
+    - mkdir "${BF_SNAPSHOT_DIR}"
+
+    # generate ansible inventory
+    - python3 code/gen_inventory.py
+
+    # generate firewall policy
+    - python3 code/acl_gen.py -n inputs/firewall/network.net -s inputs/firewall/services.svc -p inputs/firewall/fwl_in_out.yml -f yaml > templates/fwl_zone_config_h.j2
+    - python3 code/acl_gen.py -n inputs/firewall/network.net -s inputs/firewall/services.svc -p inputs/firewall/fwl_out_in.yml -f yaml >> templates/fwl_zone_config_h.j2
+
+    # generate device configurations (Python)
+    - python3 code/gen_configs.py
+
+    ### copy other files that are needed needed for analysis
+    - cp -r batfish "${BF_SNAPSHOT_DIR}"
+
+  artifacts:
+    paths:
+      - ${BF_SNAPSHOT_DIR}
+    expire_in: 1 week
+
+policy_eval:
+  stage: test
+  dependencies:
+    - config_gen
+  script:
+    ## policy eval
+    - if [ -f "${BF_GIT_FILE}" ];
+        then
+          export BF_SNAPSHOT=`cat "${BF_GIT_FILE}"`;
+          export BF_INIT_SNAPSHOT="no";
+        else
+          export BF_SNAPSHOT=${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHORT_SHA};
+          export BF_INIT_SNAPSHOT="yes";
+      fi
+    - echo ${BF_SNAPSHOT} ${BF_INIT_SNAPSHOT}
+    - exit_code_pytest=0
+    - exit_code_ansible=0
+    - pytest policies || eval "exit_code_pytest=\$?"
+    - ansible-playbook -i ansible-policies/inventory ansible-policies/reachability.yml || eval "exit_code_ansible=\$?"
+    - ansible-playbook -i ansible-policies/inventory ansible-policies/internal_protection.yml || eval "exit_code_ansible=\$?"
+    - ansible-playbook -i ansible-policies/inventory ansible-policies/internal_protection_tcp.yml || eval "exit_code_ansible=\$?"
+    - echo $exit_code_ansible $exit_code_pytest
+    - eval "[[ ${exit_code_pytest} == 0 && ${exit_code_ansible} == 0 ]]"

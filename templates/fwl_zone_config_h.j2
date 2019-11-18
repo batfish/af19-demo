@@ -1,0 +1,22 @@
+
+
+security {
+    policies {
+        global {
+            policy DENY-ALL {
+                match {
+                    source-address any;
+                    destination-address any;
+                    application any;
+                }
+                then {
+                    deny;
+                    log {
+                        session-init;
+                        session-close;
+                    }
+                }
+            }
+        }
+    }
+}

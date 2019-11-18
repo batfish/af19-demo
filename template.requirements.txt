@@ -1,0 +1,8 @@
+# change to pybfe for Batfish Enterprise
+pybatfish
+jinja2
+capirca
+pyyaml
+pytest
+netaddr
+ansible

@@ -1,0 +1,56 @@
+target: srx from-zone INSIDE to-zone OUTSIDE
+terms:
+-   clauses:
+        action: accept
+        icmp_type: echo-request echo-reply
+        logging: true
+        protocol: icmp
+    name: PERMIT-ICMP
+-   clauses:
+        action: accept
+        destination_address: WEB-SERVERS
+        destination_port: HTTPS HTTP
+        logging: true
+        protocol: tcp
+    name: PERMIT-WEB
+-   clauses:
+        action: accept
+        destination_port: SMTP
+        protocol: tcp
+    name: PERMIT-SMTP
+-   clauses:
+        action: accept
+        destination_address: GOOGLE_DNS CLOUDFLARE
+        destination_port: DNS
+        protocol: tcp udp
+    name: PERMIT-DNS
+-   clauses:
+        action: deny
+        destination_port: DNS
+        logging: true
+        protocol: tcp udp
+    name: BLOCK-OTHER-DNS
+-   clauses:
+        action: accept
+        destination_port: NTP
+        logging: true
+        protocol: udp
+    name: PERMIT-NTP
+-   clauses:
+        action: deny
+        destination_port: POSTGRESQL LDAP_SERVICE IDENT TELNET MS_RPC_EPMAP
+            MSSQL MSSQL_MONITOR RDP
+        logging: true
+        protocol: tcp
+    name: BLOCK-BAD-TCP
+-   clauses:
+        action: deny
+        destination_port: DHCP IDENT RPC MS_RPC_EPMAP
+        logging: true
+        protocol: udp
+    name: BLOCK-BAD-UDP
+-   clauses:
+        action: accept
+        logging: true
+    name: CATCH-ALL
+

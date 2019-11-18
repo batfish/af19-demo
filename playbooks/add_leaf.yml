@@ -1,0 +1,72 @@
+---
+- name: Create Configuration for new Leaf Router
+  connection: local
+  hosts: localhost
+  gather_facts: no
+
+  vars:
+    demo_base_dir: "{{ lookup('env', 'PWD') }}"
+
+  vars_prompt:
+    - name: "leaf_number"
+      prompt: "Enter the number for the new leaf router"
+      private: no
+    - name: "bgp_as_input"
+      prompt: "Enter the BGP AS number for the new leaf router"
+      private: no
+
+  tasks:
+    - set_fact:
+         # need to ensure formatting of 2 digits for hostname
+         hostname: "leaf{{leaf_number}}"
+         #bgp_as: "{{65000 + leaf_number|int}}"
+         bgp_as: "{{bgp_as_input}}"
+         loopback:
+           address: "10.1.1.{{leaf_number}}"
+         mgmt:
+           address: "10.254.1.{{leaf_number}}/16"
+           gateway: 10.254.254.254
+         ports:
+           - name: swp49
+             bgp: true
+           - name: swp50
+             bgp: true
+           - name: swp51
+             bgp: true
+           - name: swp52
+             bgp: true
+           - name: swp1
+             vlan: "{{100 + leaf_number|int}}"
+           - name: swp2
+             vlan: "{{200 + leaf_number|int}}"
+         vlans:
+           - id: "{{100 + leaf_number|int}}"
+             address: "10.100.{{leaf_number}}.1/24"
+           - id: "{{200 + leaf_number|int}}"
+             address: "10.200.{{leaf_number}}.1/24"
+      register: test
+
+    - name: Write computed variables to YAML
+      copy:
+        content: "{{ test.ansible_facts|to_nice_yaml }}"
+        dest: "{{ demo_base_dir }}/inputs/{{ hostname }}.yml"
+
+    - name: Default commit message
+      set_fact:
+        commit_message: "adding leaf{{leaf_number}} to fabric"
+
+    - name: Prompt for commit message
+      pause:
+        prompt: "Enter commit message [{{ commit_message }}]"
+      register: commit_prompt
+
+    - name: Override default commit message if needed
+      set_fact:
+        commit_message: "{{ commit_prompt.user_input }}"
+      when: commit_prompt.user_input != ""
+
+    - name: Add new file to git, commit, and push
+      shell:
+          "git add ../inputs;
+          git commit -am \"{{ commit_message }}\";
+          git push"

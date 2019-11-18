@@ -1,0 +1,24 @@
+internal_services:
+- name: Private subnets (new-TCP)
+  ip: '10.100.0.0/16'
+
+- name: All MySQL DB ports
+  ip: '10.200.0.0/16'
+  port: '1433-1434'
+
+- name: Finance (new-TCP)
+  ip: '10.200.10.0/24'
+
+- name: HR (new-TCP)
+  ip: '10.200.20.0/24'
+
+- name: Development (new-TCP)
+  ip: '10.200.30.0/24'
+
+- name: RDP
+  ip: '10.100.0.0/16, 10.200.0.0/16'
+  port: '3389'
+
+- name: High-ports (new-TCP)
+  ip: '10.200.0.0/16'
+  port: '1024-65535'

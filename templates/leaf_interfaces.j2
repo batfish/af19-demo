@@ -1,0 +1,48 @@
+{{hostname}}
+
+# This file describes the network interfaces
+
+auto lo
+iface lo inet loopback
+    address {{ loopback['address'] }}/32
+
+auto eth0
+iface eth0
+    address {{ mgmt['address'] }}
+    gateway {{ mgmt['gateway'] }}
+    vrf mgmt
+
+auto mgmt
+iface mgmt
+    vrf-table auto
+
+{% set vlan_port_list = [] -%}
+{% set vlan_list = [] -%}
+{% for port in ports %}
+
+auto {{ port['name'] }}
+iface {{ port['name'] }}
+{% if port['vlan'] is defined %}
+    bridge-access {{ port['vlan'] }}
+    {% do vlan_port_list.append(port['name']) %}
+{% endif %}
+{% endfor %}
+
+{% for vlan in vlans %}
+{% do vlan_list.append(vlan['id']) %}
+{% do vlan_port_list.append("vlan"~vlan['id']) %}
+auto vlan{{ vlan['id'] }}
+iface vlan{{ vlan['id'] }}
+  address {{ vlan['address'] }}
+  vlan-id {{ vlan['id'] }}
+  vlan-raw-device bridge
+
+{% endfor %}
+
+auto bridge
+iface bridge
+    bridge-ports {{ vlan_port_list|join(" ") }}
+    bridge-vids {{ vlan_list|join(" ") }}
+    bridge-vlan-aware yes
+
+### end /etc/network/interfaces

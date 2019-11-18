@@ -1,0 +1,25 @@
+bgp_as: 65018
+hostname: leaf18
+loopback:
+  address: 10.1.1.18
+mgmt:
+  address: 10.254.1.18/16
+  gateway: 10.254.254.254
+ports:
+- bgp: true
+  name: swp49
+- bgp: true
+  name: swp50
+- bgp: true
+  name: swp51
+- bgp: true
+  name: swp52
+- name: swp1
+  vlan: 118
+- name: swp2
+  vlan: 218
+vlans:
+- address: 10.100.18.1/24
+  id: 118
+- address: 10.200.18.1/24
+  id: 218

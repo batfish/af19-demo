@@ -1,0 +1,25 @@
+bgp_as: 65015
+hostname: leaf15
+loopback:
+  address: 10.1.1.15
+mgmt:
+  address: 10.254.1.15/16
+  gateway: 10.254.254.254
+ports:
+- bgp: true
+  name: swp49
+- bgp: true
+  name: swp50
+- bgp: true
+  name: swp51
+- bgp: true
+  name: swp52
+- name: swp1
+  vlan: 115
+- name: swp2
+  vlan: 215
+vlans:
+- address: 10.100.15.1/24
+  id: 115
+- address: 10.200.15.1/24
+  id: 215
