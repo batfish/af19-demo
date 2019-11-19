@@ -8,6 +8,7 @@ This folder contains all of the code for the Batfish enabled CI pipeline demonst
     * Recommend naming it `af19-template`
   * Register the runner with the project
 * BF server running on localhost
+* Clone (or Download) this repository onto your local machine
 
 Note:
 You can reduce execution time of the demo by leveraging an existing virtual environment that has the necessary dependencies install. 
@@ -45,6 +46,19 @@ The initialization process may take a long time. You can track this process with
     * Via user icon on top right -> settings -> ssh key
 
 
+###### Clone AF19-Template repo locally
+The demo requires a local clone of the GitLab repository that you just created.
+
+Steps:
+* Go to the project page
+* Click on `Clone` (towards the top right)
+  * Copy the `Clone with SSH` URL to clipboard
+
+     ![](images/gitlab_repo_clone.png)
+* Open a terminal window
+  * Type `git clone git@localhost:samir-demo/af19-template.git` (replace the `git@...` with what you copied from the Project page
+  * All of the playbooks referenced in the demo below, will need to be executed from this local clone.
+
 ##### Gitlab runner
 
 ###### Install GitLab runner
@@ -81,18 +95,19 @@ It is recommended that you setup the following environment variables:
 * `GIT_TEMPLATE` - This is the Git Clone URL for the Template repo you setup in Gitlab
    * Example: `git@localhost:samir-demo/af19-template.git`
 
-Then you setup the demos:
+Then you setup the demos (this is run from the local clone of the `batfish/af19-demo` repository):
 
 `bash run.sh`  
 
 This command will do the following:
   * via `setup-git-repos.sh`, push content to the template repo. 
  
-NOTE: This will reset the Git repository to the base state, so you can run the demo scenarios again.
+NOTE: This will reset the GitLab repository to the base state, so you can run the demo scenarios again.
   
 ## Running the demos
 
-To run the demos you will need to have a local clone of the `af19-template` repo. Both demo scenarios require you to run an Ansible playbook from this directory
+To run the demos you will need to have a local clone of the `af19-template` repo. 
+Both demo scenarios require you to run an Ansible playbook from this directory
 
 ## Demo Scenario #1
 
