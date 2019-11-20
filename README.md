@@ -9,6 +9,8 @@ This folder contains all of the code for the Batfish enabled CI pipeline demonst
   * Register the runner with the project
 * BF server running on localhost
 * Clone (or Download) this repository onto your local machine
+* Install python dependencies listed in `requirements.txt` file
+  * `pip install -r requirements.txt`
 
 Note:
 You can reduce execution time of the demo by leveraging an existing virtual environment that has the necessary dependencies install. 
