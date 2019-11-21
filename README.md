@@ -58,8 +58,8 @@ Steps:
 
      ![](images/gitlab_repo_clone.png)
 * Open a terminal window
-  * Type `git clone git@localhost:samir-demo/af19-template.git` (replace the `git@...` with what you copied from the Project page
-  * All of the playbooks referenced in the demo below, will need to be executed from this local clone.
+  * Type `git clone git@localhost:samir-demo/af19-template.git` (replace the `git@...` with what you copied from the Project page)
+  * All of the playbooks referenced in the demo below, will need to be executed from the directory of this local clone.
 
 ##### Gitlab runner
 
