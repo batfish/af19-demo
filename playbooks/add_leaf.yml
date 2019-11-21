@@ -19,7 +19,6 @@
     - set_fact:
          # need to ensure formatting of 2 digits for hostname
          hostname: "leaf{{leaf_number}}"
-         #bgp_as: "{{65000 + leaf_number|int}}"
          bgp_as: "{{bgp_as_input}}"
          loopback:
            address: "10.1.1.{{leaf_number}}"
