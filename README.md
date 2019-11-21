@@ -187,7 +187,7 @@ To restart the demo, go back to the window where you ran the demo setup script a
 
 The `policies` folder contains pytest-based policies.  `conftest.py` has the test setup and the remaining files have different policies. 
 
-The `ansible-policies` folder contains Ansible-based policies. Ansible policy playbooks assume that the snapshot has already been initialized. 
+The `ansible-policies` folder contains Ansible-based policies. Ansible policy playbooks assume that the snapshot has already been initialized, so they must be invoked after the pytest-based policies. 
 
 ## Gitlab pipelines 
 
