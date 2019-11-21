@@ -35,7 +35,7 @@ docker run --detach \
   --volume ${HOME}/gitlab/data:/var/opt/gitlab \
   gitlab/gitlab-ce:latest
 ```
-The initialization process may take a long time. You can track this process with the command sudo docker logs -f gitlab
+The initialization process may take a long time. You can track this process with the command `sudo docker logs -f gitlab`
 
 * Navigate to http://localhost/
   * Create an admin password
