@@ -185,7 +185,7 @@ To restart the demo, go back to the window where you ran the demo setup script a
 
 ## Policies
 
-The `policies` folder contains pytest-based policies.  `conftest.py` has the test setup and the remaining files have different policies. These policies can be run on an already-initialized snapshot, or a snapshot can be initialized as part of running them if `BF_INIT_SNAPSHOT` environment variable is set to `yes`.
+The `policies` folder contains pytest-based policies.  `conftest.py` has the test setup and the remaining files have different policies. 
 
 The `ansible-policies` folder contains Ansible-based policies. Ansible policy playbooks assume that the snapshot has already been initialized. 
 
