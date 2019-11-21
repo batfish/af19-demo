@@ -79,21 +79,9 @@
         file: "../{{ input_yaml }}"
         name: terms
 
-#    - name: Print term
-#      debug:
-#        msg: "{{terms}}"
-#
-#    - name: Print new term
-#      debug:
-#        msg: "{{new_term}}"
-
     - name: Create new list and add new term to list
       set_fact:
          test: "{{ terms.terms + [ new_term.ansible_facts ] }}"
-
-#    - name: Print term
-#      debug:
-#        msg: "{{test}}"
 
     - name: Create new policy in memory
       set_fact:
