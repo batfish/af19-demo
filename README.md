@@ -1,9 +1,20 @@
-This folder contains all of the code for the Batfish enabled CI pipeline demonstration from Ansiblefest 2019.
+This folder contains all of the code for the [Batfish enabled CI pipeline demonstration from Ansiblefest 2019](https://www.youtube.com/watch?v=ORFiReqaUzY). 
 
-# Running the demo
+# Contents
 
-## Pre-requisites
-* Gitlab and runner setup outlined below.
+## Policies
+
+The `policies` folder contains pytest-based policies.  `conftest.py` has the test setup and the remaining files have different policies. 
+
+The `ansible-policies` folder contains Ansible-based policies. Ansible policy playbooks assume that the snapshot has already been initialized, so they must be invoked after the pytest-based policies. 
+
+## Gitlab pipelines 
+
+`template.gitlab-ci.yml` has the pipeline content for repo. 
+
+# Pre-requisites for running the demo
+
+* Access to Gitlab server and runner. See below for local setup.
   * In Gitlab, create a new project
     * Recommend naming it `af19-template`
   * Register the runner with the project
@@ -17,7 +28,9 @@ You can reduce execution time of the demo by leveraging an existing virtual envi
 To leverage an existing environment, edit the `before_script` stage of the Gitlab-CI pipeline file `template.gitlab-ci.yml`.
 
 
-### Gitlab setup on a Mac
+## Local Gitlab setup on a Mac
+
+The instructions below assume that you are installing a Gitlab server locally. If you use the online service, you can skip this part. 
 
 #### Gitlab server
 
@@ -106,7 +119,7 @@ This command will do the following:
  
 NOTE: This will reset the GitLab repository to the base state, so you can run the demo scenarios again.
   
-## Running the demos
+# Running the demos
 
 To run the demos you will need to have a local clone of the `af19-template` repo. 
 Both demo scenarios require you to run an Ansible playbook from this directory
@@ -181,14 +194,3 @@ This test fails because the network `10.100.0.0/16` has been designated as inter
 
 To restart the demo, go back to the window where you ran the demo setup script and re-run the script.
    
-# Contents
-
-## Policies
-
-The `policies` folder contains pytest-based policies.  `conftest.py` has the test setup and the remaining files have different policies. 
-
-The `ansible-policies` folder contains Ansible-based policies. Ansible policy playbooks assume that the snapshot has already been initialized, so they must be invoked after the pytest-based policies. 
-
-## Gitlab pipelines 
-
-`template.gitlab-ci.yml` has the pipeline content for template repo
