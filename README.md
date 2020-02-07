@@ -104,7 +104,7 @@ Steps:
 
 ## Setup Gitlab Repo
 
-Setup the following environment variable:
+Set the following environment variable:
 * `GIT_TEMPLATE` - This is the Git Clone URL for the repo you setup in Gitlab
    * Example: `git@localhost:samir-demo/af19-template.git`
 
