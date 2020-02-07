@@ -1,6 +1,6 @@
 This repository contains all of the code for the [Batfish enabled CI pipeline demonstration from Ansiblefest 2019](https://www.youtube.com/watch?v=ORFiReqaUzY), including a script to initialize the Gitlab repository from where the CI tests are run.
 
-# Organization
+# Repository organization and CI workflow
 
 Each time a commit is made to the Gitlab repository, device configs are generated and the generated configs are evaluated against defined policies. 
  * The device configs are generated using jinja2 templates in the `templates` folder and input data in the `inputs` folder. The code for configuration generation is in the `code` folder. 
@@ -8,7 +8,7 @@ Each time a commit is made to the Gitlab repository, device configs are generate
 
 The exact sequence of commands to generate configs and run policies are in `template.gitlab-ci.yml` file, which is uploaded to the Gitlab repository as its pipeline file (`.gitlab-ci.yml`) when the repository is initialized.
 
-
+Network changes are proposed using Ansible playbooks in the `playbooks` folder. These playbooks change the inputs used to generate device configs. When these changes are committed to Gitlab, new configurations are generated and evaluated as described above.
 
 # Pre-requisites for running the demo
 
