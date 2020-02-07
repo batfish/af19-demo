@@ -1,16 +1,14 @@
-This folder contains all of the code for the [Batfish enabled CI pipeline demonstration from Ansiblefest 2019](https://www.youtube.com/watch?v=ORFiReqaUzY). 
+This repository contains all of the code for the [Batfish enabled CI pipeline demonstration from Ansiblefest 2019](https://www.youtube.com/watch?v=ORFiReqaUzY), including a script to initialize the Gitlab repository from where the CI tests are run.
 
-# Contents
+# Repository organization and CI workflow
 
-## Policies
+Each time a commit is made to the Gitlab repository, device configs are generated and the generated configs are evaluated against defined policies. 
+ * The device configs are generated using jinja2 templates in the `templates` folder and input data in the `inputs` folder. The code for configuration generation is in the `code` folder. 
+ * Batfish supports both Ansible and Python (pytest) based policies. The `policies` folder contains pytest-based policies, and the `ansible-policies` folder contains Ansible-based policies. The setup for pytest policies (`conftest.py`) initializes a Batfish snapshot with generated device configs. Ansible policy playbooks assume that the snapshot has already been initialized.  
 
-The `policies` folder contains pytest-based policies.  `conftest.py` has the test setup and the remaining files have different policies. 
+The exact sequence of commands to generate configs and run policies are in `template.gitlab-ci.yml` file, which is uploaded to the Gitlab repository as its pipeline file (`.gitlab-ci.yml`) when the repository is initialized.
 
-The `ansible-policies` folder contains Ansible-based policies. Ansible policy playbooks assume that the snapshot has already been initialized, so they must be invoked after the pytest-based policies. 
-
-## Gitlab pipelines 
-
-`template.gitlab-ci.yml` has the pipeline content for repo. 
+Network changes are proposed using Ansible playbooks in the `playbooks` folder. These playbooks change the inputs used to generate device configs. When these changes are committed to Gitlab, new configurations are generated and evaluated as described above.
 
 # Pre-requisites for running the demo
 
@@ -104,18 +102,15 @@ Steps:
 * `gitlab-runner restart` if the process is already running
 
 
-### Environment variables
+## Setup Gitlab Repo
 
-It is recommended that you setup the following environment variables:
-* `GIT_TEMPLATE` - This is the Git Clone URL for the Template repo you setup in Gitlab
+Set the following environment variable:
+* `GIT_TEMPLATE` - This is the Git Clone URL for the repo you setup in Gitlab
    * Example: `git@localhost:samir-demo/af19-template.git`
 
-Then you setup the demos (this is run from the local clone of the `batfish/af19-demo` repository):
+Then, initialize your Gitlab repo by running the following command from the local clone of the `batfish/af19-demo` repository:
 
-`bash run.sh`  
-
-This command will do the following:
-  * via `setup-git-repos.sh`, push content to the template repo. 
+`bash setup-gitlab-repo.sh`
  
 NOTE: This will reset the GitLab repository to the base state, so you can run the demo scenarios again.
   
